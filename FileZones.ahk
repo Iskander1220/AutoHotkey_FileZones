@@ -1,8 +1,3 @@
-﻿;
-/*
-
-*/
-
 ; ============================================================
 ;  FileZones — 6 зон (3x2): папки, DnD, виды, INI-состояние
 ;  AutoHotkey v1.1.30+   (запускается извне, окно сразу видно)
@@ -423,14 +418,21 @@ BuildMenus() {
     Menu, ZoneMenu, Add, Открыть, MenuOpen
     Menu, ZoneMenu, Add, Показать в проводнике, MenuReveal
     Menu, ZoneMenu, Add
-    Menu, ZoneMenu, Add, Цвет зоны, :ColorMenu
-    Menu, ZoneMenu, Add, Переименовать зону, MenuRename
-    Menu, ZoneMenu, Add, Убрать выделенное из зоны, MenuRemove
-    Menu, ZoneMenu, Add, Выбрать папку…, MenuPickFolder
-    Menu, ZoneMenu, Add, Показать скрытые объекты, MenuUnhide
-    Menu, ZoneMenu, Add, Очистить зону, MenuClear
-    Menu, ZoneMenu, Add, Отвязать папку, MenuUnbind
+    ; Частые действия
     Menu, ZoneMenu, Add, Обновить, MenuRefresh
+    Menu, ZoneMenu, Add, Убрать выделенное из зоны, MenuRemove
+    Menu, ZoneMenu, Add
+    ; Управление папкой и скрытыми объектами
+    Menu, ZoneMenu, Add, Выбрать папку…, MenuPickFolder
+    Menu, ZoneMenu, Add, Отвязать папку, MenuUnbind
+    Menu, ZoneMenu, Add, Показать скрытые объекты, MenuUnhide
+    Menu, ZoneMenu, Add
+    ; Оформление зоны
+    Menu, ZoneMenu, Add, Переименовать зону, MenuRename
+    Menu, ZoneMenu, Add, Цвет зоны, :ColorMenu
+    Menu, ZoneMenu, Add
+    ; Полная очистка
+    Menu, ZoneMenu, Add, Очистить зону, MenuClear
     Menu, ZoneMenu, Add
     Menu, ZoneMenu, Add, Вид: Таблица, MenuView
     Menu, ZoneMenu, Add, Вид: Эскизы, MenuView
@@ -663,7 +665,7 @@ ApplySettingsFromGui() {
     START_CHUNK := SetStartChunk + 0
     FS_BASE := SetFsBase + 0
     FS_TITLE := SetFsTitle + 0
-    GRID_COLOR := NormalizeHexColor(SetGridColor, "D9D9D9")
+    GRID_COLOR := NormalizeHexColor(SetGridColor, "FFFFFF")
     GRID_THICKNESS := SetGridThickness + 0
     BAND_COLOR := NormalizeBandColor(SetBandColor)
     BAND_THICKNESS := SetBandThickness + 0
@@ -2220,7 +2222,7 @@ Clamp(value, low, high) {
     return (value < low) ? low : ((value > high) ? high : value)
 }
 
-NormalizeHexColor(value, fallback := "D9D9D9") {
+NormalizeHexColor(value, fallback := "FFFFFF") {
     value := Trim(value)
     if (SubStr(value, 1, 1) = "#")
         value := SubStr(value, 2)
@@ -2253,7 +2255,7 @@ ZoneBandColor(i) {
 
 ; Тот же оттенок, что у зоны, но насыщеннее и темнее: полоса видна на фоне зоны.
 IntensifyHexColor(hex, percent) {
-    hex := NormalizeHexColor(hex, "D9D9D9")
+    hex := NormalizeHexColor(hex, "FFFFFF")
     p := Clamp(percent + 0, 0, 100) / 100
     r := HexVal(SubStr(hex, 1, 2)) / 255
     g := HexVal(SubStr(hex, 3, 2)) / 255
@@ -2360,7 +2362,7 @@ OnBandCtlColor(wParam, lParam, msg, hwnd) {
 }
 
 HexToBgr(hex) {
-    hex := NormalizeHexColor(hex, "D9D9D9")
+    hex := NormalizeHexColor(hex, "FFFFFF")
     r := HexVal(SubStr(hex, 1, 2))
     g := HexVal(SubStr(hex, 3, 2))
     b := HexVal(SubStr(hex, 5, 2))
@@ -2368,7 +2370,7 @@ HexToBgr(hex) {
 }
 
 BandTextColor(hex) {
-    hex := NormalizeHexColor(hex, "D9D9D9")
+    hex := NormalizeHexColor(hex, "FFFFFF")
     r := HexVal(SubStr(hex, 1, 2))
     g := HexVal(SubStr(hex, 3, 2))
     b := HexVal(SubStr(hex, 5, 2))
@@ -2535,8 +2537,8 @@ LoadState() {
     FS_BASE := Clamp(FS_BASE + 0, 8, 24)
     LoadAppSetting("FontTitle", FS_TITLE, 15)
     FS_TITLE := Clamp(FS_TITLE + 0, 9, 32)
-    LoadAppSetting("GridColor", GRID_COLOR, "D9D9D9")
-    GRID_COLOR := NormalizeHexColor(GRID_COLOR, "D9D9D9")
+    LoadAppSetting("GridColor", GRID_COLOR, "FFFFFF")
+    GRID_COLOR := NormalizeHexColor(GRID_COLOR, "FFFFFF")
     LoadAppSetting("GridThickness", GRID_THICKNESS, 10)
     GRID_THICKNESS := Clamp(GRID_THICKNESS + 0, 2, 40)
     LoadAppSetting("BandColor", BAND_COLOR, "auto")
