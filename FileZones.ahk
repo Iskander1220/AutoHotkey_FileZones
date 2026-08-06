@@ -3000,16 +3000,5 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-	If FileExist("E:\Program Files\Bred3\bred3_2k.exe")
-		Run, "E:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files (86)\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files (86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files (x86)\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files (x86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files\PSPad editor\PSPad.exe")
-		Run, "C:\Program Files\PSPad editor\PSPad.exe" "%A_ScriptFullPath%"
-	Else
-		Run, "notepad.exe" "%A_ScriptFullPath%"
+	Run, "notepad.exe" "%A_ScriptFullPath%"
 }
