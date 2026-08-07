@@ -3014,5 +3014,5 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-    Run, "notepad.exe" "%A_ScriptFullPath%"
+    Edit
 }
