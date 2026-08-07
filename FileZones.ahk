@@ -1,4 +1,4 @@
-; ============================================================
+﻿; ============================================================
 ;  FileZones — 6 зон (3x2): папки, DnD, виды, INI-состояние
 ;  AutoHotkey v1.1.30+   (запускается извне, окно сразу видно)
 ; ============================================================
@@ -42,7 +42,8 @@ global LEGACY   := {}                          ; зоны, прочитанны�
 global DEFCOL   := ["E8F1FF","E8F7EE","FFF1D6","FBE7EF","EFE8FF","DFF6F4"]
 global PALETTE  := ["E8F1FF","E8F7EE","FFF1D6","FBE7EF","EFE8FF","DFF6F4","FFE5D8","E5EDF8","F2E6D8","EEF4D2"]
 global VIEWNAME := {"Report":"Таблица","Icon":"Эскизы","Medium":"Обычные значки"}
-global WX := "", WY := "", WW := 1280, WH := 800, WMAX := 0
+global DPI_SCALE := A_ScreenDPI / 96.0             ; 96 DPI = 100%; внутренние размеры храним в логических единицах
+global WX := "", WY := "", WW := Dpi(1280), WH := Dpi(800), WMAX := 0
 global WSAVED   := ""                          ; что уже лежит в INI: положение окна пишется только при изменении
 global FS_BASE  := 11, FS_TITLE := 15          ; размеры шрифтов (чуть крупнее прежних)
 global GRID_COLOR := "FFFFFF", GRID_THICKNESS := 10
@@ -62,9 +63,17 @@ InitImageLists()
 
 STitle := "FileZones (Файловые зоны — быстрый доступ)"
 
+; Перевод логических координат GUI (96 DPI) в физические пиксели.
+; Главный GUI и изменяемая справка работают с -DPIScale, чтобы размеры,
+; полученные из GetClientRect/A_GuiWidth, не масштабировались повторно.
+Dpi(value) {
+    global DPI_SCALE
+    return Round(value * DPI_SCALE)
+}
+
 ; ================================== GUI ==================================
 ; +E0x80 = WS_EX_TOOLWINDOW — окна нет на панели задач и в Alt+Tab
-Gui, Main:New, +Resize +MinSize900x560 +E0x10 +HwndGuiHwnd, STitle
+Gui, Main:New, % "+Resize -DPIScale +MinSize" Dpi(900) "x" Dpi(560) " +E0x10 +HwndGuiHwnd", STitle
 Gui, Main:Default
 Gui, Font, % "s" FS_BASE, Segoe UI
 Gui, Color, %GRID_COLOR%
@@ -81,20 +90,20 @@ Loop, %ZCOUNT%
     ; в OnBandCtlColor — так цвет не зависит от темы Windows и от опции Background.
     ; Стиль 0x200 (SS_CENTERIMAGE) центрирует текст и значки по высоте полосы.
     Gui, Font, % "s" FS_TITLE " w600", Segoe UI
-    Gui, Add, Text, % "x8 y8 w120 h" BAND_THICKNESS " hwndhTT +0x200 Background" bc " gZNameClick Center", % Z[i].name
+    Gui, Add, Text, % "x" Dpi(8) " y" Dpi(8) " w" Dpi(120) " h" Dpi(BAND_THICKNESS) " hwndhTT +0x200 Background" bc " gZNameClick Center", % Z[i].name
 
     ; Обновление зоны.
     Gui, Font, s18 Norm, Segoe UI Symbol
-    Gui, Add, Text, % "x8 y8 w36 h" BAND_THICKNESS " hwndhRB +0x200 Background" bc " gZRefreshBtn Center", ↻
+    Gui, Add, Text, % "x" Dpi(8) " y" Dpi(8) " w" Dpi(36) " h" Dpi(BAND_THICKNESS) " hwndhRB +0x200 Background" bc " gZRefreshBtn Center", ↻
 
     Gui, Font, s14 Norm, Segoe UI Emoji
-    Gui, Add, Text, % "x8 y8 w36 h" BAND_THICKNESS " hwndhFB +0x200 Background" bc " gZFolderBtn Center", 📁
+    Gui, Add, Text, % "x" Dpi(8) " y" Dpi(8) " w" Dpi(36) " h" Dpi(BAND_THICKNESS) " hwndhFB +0x200 Background" bc " gZFolderBtn Center", 📁
 
     Gui, Font, s16 Norm, Segoe UI
-    Gui, Add, Text, % "x8 y8 w36 h" BAND_THICKNESS " hwndhVB +0x200 Background" bc " gZViewBtn Center", % ViewGlyph(Z[i].view)
+    Gui, Add, Text, % "x" Dpi(8) " y" Dpi(8) " w" Dpi(36) " h" Dpi(BAND_THICKNESS) " hwndhVB +0x200 Background" bc " gZViewBtn Center", % ViewGlyph(Z[i].view)
 
     Gui, Font, % "s" FS_BASE " Norm c202020", Segoe UI
-    Gui, Add, ListView, x8 y42 w200 h120 hwndhLV gZLVEvent Background%c% -E0x200 Report +0x100
+    Gui, Add, ListView, % "x" Dpi(8) " y" Dpi(42) " w" Dpi(200) " h" Dpi(120) " hwndhLV gZLVEvent Background" c " -E0x200 Report +0x100"
                       , Имя|Тип|Размер|Изменён|Путь|Создан
 
     LVH[i] := hLV, TITLEH[i] := hTT
@@ -116,9 +125,9 @@ Loop, %ZCOUNT%
 
 ; общий редактор имени и маркер вставки — создаются последними (верх z-порядка)
 Gui, Font, % "s" FS_TITLE " Bold", Segoe UI
-Gui, Add, Edit, % "x8 y8 w120 h" BandTitleHeight() " hwndhNameEdit Hidden -WantReturn Center"
+Gui, Add, Edit, % "x" Dpi(8) " y" Dpi(8) " w" Dpi(120) " h" BandTitleHeight() " hwndhNameEdit Hidden -WantReturn Center"
 Gui, Font, % "s" FS_BASE " Norm", Segoe UI
-Gui, Add, Progress, x0 y0 w3 h3 hwndhMARK Hidden Disabled E0x20 Background0078D7 c0078D7, 0
+Gui, Add, Progress, % "x0 y0 w" Dpi(3) " h" Dpi(3) " hwndhMARK Hidden Disabled E0x20 Background0078D7 c0078D7", 0
 
 AllowDrops(GuiHwnd)
 BuildMenus()
@@ -218,7 +227,8 @@ PosVisible(x, y, w, h) {
     SysGet, vy, 77
     SysGet, vw, 78
     SysGet, vh, 79
-    return (x + w > vx + 60) && (x < vx + vw - 60) && (y >= vy - 8) && (y < vy + vh - 40)
+    return (x + w > vx + Dpi(60)) && (x < vx + vw - Dpi(60))
+        && (y >= vy - Dpi(8)) && (y < vy + vh - Dpi(40))
 }
 
 WatchWinPos:
@@ -708,28 +718,28 @@ ShowHelpWindow() {
     }
     Gui, Settings:Hide
     ; Окно справки самостоятельное и всегда остаётся поверх остальных окон.
-    Gui, Help:New, +AlwaysOnTop +Resize +MinSize640x480 +HwndHelpHwnd, Справка FileZones
-    Gui, Help:Margin, 14, 12
+    Gui, Help:New, % "+AlwaysOnTop +Resize -DPIScale +MinSize" Dpi(640) "x" Dpi(480) " +HwndHelpHwnd", Справка FileZones
+    Gui, Help:Margin, % Dpi(14), % Dpi(12)
     Gui, Help:Color, FFFFFF
     Gui, Help:Font, s10, Segoe UI
     ; Текст справки — обычная HTML-страница в браузерном контроле.
-    Gui, Help:Add, ActiveX, x14 y12 w692 h510 hwndHelpEditHwnd vHelpDoc, Shell.Explorer
-    Gui, Help:Add, Button, x616 y534 w90 h28 hwndHelpOkHwnd gCloseHelpWindow Default, OK
+    Gui, Help:Add, ActiveX, % "x" Dpi(14) " y" Dpi(12) " w" Dpi(692) " h" Dpi(510) " hwndHelpEditHwnd vHelpDoc", Shell.Explorer
+    Gui, Help:Add, Button, % "x" Dpi(616) " y" Dpi(534) " w" Dpi(90) " h" Dpi(28) " hwndHelpOkHwnd gCloseHelpWindow Default", OK
     HelpDoc.Silent := true
     HelpDoc.Navigate("about:blank")
     while (HelpDoc.ReadyState != 4)
         Sleep, 20
     HelpDoc.document.write(BuildHelpHtml())
     HelpDoc.document.close()
-    Gui, Help:Show, w720 h574, Справка FileZones
+    Gui, Help:Show, % "w" Dpi(720) " h" Dpi(574), Справка FileZones
     WinSet, AlwaysOnTop, On, ahk_id %HelpHwnd%
 }
 
 HelpGuiSize:
 if (A_EventInfo = 1)
     return
-GuiControl, Help:Move, %HelpEditHwnd%, % "w" (A_GuiWidth - 28) " h" (A_GuiHeight - 64)
-GuiControl, Help:Move, %HelpOkHwnd%, % "x" (A_GuiWidth - 104) " y" (A_GuiHeight - 40)
+GuiControl, Help:Move, %HelpEditHwnd%, % "w" (A_GuiWidth - Dpi(28)) " h" (A_GuiHeight - Dpi(64))
+GuiControl, Help:Move, %HelpOkHwnd%, % "x" (A_GuiWidth - Dpi(104)) " y" (A_GuiHeight - Dpi(40))
 return
 
 CloseHelpWindow:
@@ -998,7 +1008,7 @@ DoDrag(src) {
     moved := 0
     while GetKeyState("LButton", "P") {
         MouseGetPos, mx, my
-        if (Abs(mx - sx0) > 4 || Abs(my - sy0) > 4) {
+        if (Abs(mx - sx0) > Dpi(4) || Abs(my - sy0) > Dpi(4)) {
             moved := 1
             break
         }
@@ -1021,7 +1031,7 @@ DoDrag(src) {
             UpdateMarker(t, mx, my)
         } else
             HideMarker()
-        ToolTip, % "Перенос: " paths.Length() " объект(ов)", mx + 18, my + 18
+        ToolTip, % "Перенос: " paths.Length() " объект(ов)", mx + Dpi(18), my + Dpi(18)
         Sleep, 10
     }
     ToolTip
@@ -1095,7 +1105,7 @@ ZoneUnderCursor(mx, my) {
     zi := ZoneFromPoint(mx, my)                ; заголовок/кнопки зоны
     if (zi)
         return zi
-    return NearZone(mx, my, 16)                ; курсор в зазоре между зонами
+    return NearZone(mx, my, Dpi(16))           ; курсор в зазоре между зонами
 }
 
 ; ближайшая зона, если точка не дальше tol пикселей от её списка
@@ -1139,10 +1149,11 @@ AutoScroll(t, my) {
     DllCall("GetWindowRect", "Ptr", hLV, "Ptr", &rc)
     top := NumGet(rc, 4, "Int"), bot := NumGet(rc, 12, "Int")
     dy := 0
-    if (my - top < 26 && my >= top)
-        dy := -26
-    else if (bot - my < 26 && my <= bot)
-        dy := 26
+    edge := Dpi(26)
+    if (my - top < edge && my >= top)
+        dy := -edge
+    else if (bot - my < edge && my <= bot)
+        dy := edge
     if (dy)
         DllCall("SendMessageW", "Ptr", hLV, "UInt", 0x1014, "Ptr", 0, "Ptr", dy)   ; LVM_SCROLL
 }
@@ -1160,14 +1171,14 @@ UpdateMarker(t, mx, my) {
 
     if (Z[t].view = "Report") {                ; ---- таблица: только по вертикали
         idx := InsertIndexReport(hLV, cy, n)
-        pw := lw, ph := 3, px := 0, py := 2
+        pw := lw, ph := Dpi(3), px := 0, py := Dpi(2)
         if (n) {
             k := (idx > n) ? n : idx
             if GetItemRect(hLV, k - 1, L, T, R, B)
-                py := ((idx > n) ? B : T) - 1
+                py := ((idx > n) ? B : T) - Dpi(1)
         }
     } else {                                   ; ---- эскизы/значки: по горизонтали
-        px := 3, py := 3, pw := 3, ph := 40
+        px := Dpi(3), py := Dpi(3), pw := Dpi(3), ph := Dpi(40)
         idx := InsertIndexIcon(hLV, cx, cy, n, px, py, ph)
     }
 
@@ -1210,7 +1221,7 @@ InsertIndexReport(hLV, cy, n) {
 }
 
 InsertIndexIcon(hLV, cx, cy, n, ByRef px, ByRef py, ByRef ph) {
-    px := 3, py := 3, ph := 40
+    px := Dpi(3), py := Dpi(3), ph := Dpi(40)
     if (!n)
         return 1
     top := DllCall("SendMessageW", "Ptr", hLV, "UInt", 0x1027, "Ptr", 0, "Ptr", 0, "Int")
@@ -1240,7 +1251,7 @@ InsertIndexIcon(hLV, cx, cy, n, ByRef px, ByRef py, ByRef ph) {
         return n + 1
     GetItemRect(hLV, sel, L, T, R, B)
     aft := (cx > (L + R) // 2)
-    px := (aft ? R : L) - 1
+    px := (aft ? R : L) - Dpi(1)
     py := T
     ph := B - T
     return sel + 1 + (aft ? 1 : 0)
@@ -1550,8 +1561,8 @@ ApplyView(i, loadLarge := 1) {
             FillIconSize((vw = "Medium") ? 48 : 96) ; при старте — отдельным таймером
         LVStyleClear(hLV, 0x0080)             ; снять LVS_NOLABELWRAP — подпись переносится по строкам
         sz := (vw = "Medium") ? 48 : 96
-        cx := sz + 24                         ; ширина ячейки ≈ ширина значка: текст не шире эскиза
-        cy := sz + ((vw = "Medium") ? 46 : 62) ; запас по высоте под многострочную подпись
+        cx := sz + Dpi(24)                    ; отступы ячейки учитывают масштаб экрана
+        cy := sz + Dpi((vw = "Medium") ? 46 : 62) ; запас по высоте под многострочную подпись
         DllCall("SendMessageW", "Ptr", hLV, "UInt", 0x1035, "Ptr", 0   ; LVM_SETICONSPACING
               , "Ptr", cx | (cy << 16))
     }
@@ -1703,11 +1714,11 @@ LaunchItem(i, row) {                 ; (3) запустили — сохрани
 
 LayoutZones(w, h) {
     ; Внутренняя сетка имеет настраиваемую толщину, внешний отступ — вдвое меньше.
-    gap := GRID_THICKNESS
-    outer := Max(1, Floor(gap / 2))
+    gap := Dpi(GRID_THICKNESS)
+    outer := Max(Dpi(1), Floor(gap / 2))
     cw := Floor((w - outer * 2 - gap * 2) / 3)
     ch := Floor((h - outer * 2 - gap) / 2)
-    if (cw < 120 || ch < 100)
+    if (cw < Dpi(120) || ch < Dpi(100))
         return
     Loop, %ZCOUNT% {
         i := A_Index
@@ -1719,14 +1730,14 @@ LayoutZones(w, h) {
         ; Справа располагаются три кнопки по 36 px: обновление,
         ; папка и выбор вида. Они идут встык, и заголовок доходит вплотную до первого значка,
         ; иначе в зазорах просвечивает цвет сетки.
-        bw := 36
+        bw := Dpi(36)
         tw := cw - bw * 3
-        if (tw < 60)
-            tw := 60
+        if (tw < Dpi(60))
+            tw := Dpi(60)
 
         ; Полоса целиком занимает заданную толщину, а текст и значки
         ; центрируются в ней по высоте стилем 0x200.
-        bh := BAND_THICKNESS
+        bh := Dpi(BAND_THICKNESS)
         GuiControl, Main:Move, % TITLEH[i],   % "x" x " y" y " w" tw " h" bh
         GuiControl, Main:Move, % REFRESHH[i], % "x" (x + cw - bw * 3) " y" y " w" bw " h" bh
         GuiControl, Main:Move, % FOLDH[i],    % "x" (x + cw - bw * 2) " y" y " w" bw " h" bh
@@ -2459,13 +2470,14 @@ ApplyZoneColors(i) {
 ; Высота названия и кнопок внутри полосы: не больше самой полосы.
 BandTitleHeight() {
     global FS_TITLE, BAND_THICKNESS
-    h := Round(FS_TITLE * 1.7) + 6
-    return (h > BAND_THICKNESS) ? BAND_THICKNESS : h
+    h := Dpi(Round(FS_TITLE * 1.7) + 6)
+    maxH := Dpi(BAND_THICKNESS)
+    return (h > maxH) ? maxH : h
 }
 
 BandIconHeight() {
     global BAND_THICKNESS
-    return (BAND_THICKNESS < 32) ? BAND_THICKNESS : 32
+    return Dpi((BAND_THICKNESS < 32) ? BAND_THICKNESS : 32)
 }
 
 ParseColorList(raw, minCount, maxCount) {
@@ -2572,10 +2584,10 @@ LoadState() {
     THUMBEXTS_RAW := Trim(thumbCfg)
     THUMBEXTS := NormalizeThumbExts(THUMBEXTS_RAW)
 
-    IniRead, t, %INI%, App, W, 1280
-    WW := (t + 0 > 400) ? t : 1280
-    IniRead, t, %INI%, App, H, 800
-    WH := (t + 0 > 300) ? t : 800
+    IniRead, t, %INI%, App, W, __MISSING__
+    WW := (t != "__MISSING__" && t + 0 > Dpi(400)) ? t + 0 : Dpi(1280)
+    IniRead, t, %INI%, App, H, __MISSING__
+    WH := (t != "__MISSING__" && t + 0 > Dpi(300)) ? t + 0 : Dpi(800)
     IniRead, t, %INI%, App, X, %A_Space%      ; позиция окна теперь запоминается
     WX := (t = "ERROR" || Trim(t) = "") ? "" : Trim(t)
     IniRead, t, %INI%, App, Y, %A_Space%
@@ -2760,7 +2772,7 @@ SaveWindowPos() {
     WMAX := (mm = 1) ? 1 : 0
     if (!WMAX) {                       ; геометрию берём только у обычного окна
         ClientSize(GuiHwnd, w, h)
-        if (w > 300 && h > 200)
+        if (w > Dpi(300) && h > Dpi(200))
             WW := w, WH := h
         WinGetPos, wx, wy, , , ahk_id %GuiHwnd%
         if (wx != "")
@@ -3002,5 +3014,5 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-	Run, "notepad.exe" "%A_ScriptFullPath%"
+    Run, "notepad.exe" "%A_ScriptFullPath%"
 }
