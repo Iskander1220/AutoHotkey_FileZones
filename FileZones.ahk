@@ -1,9 +1,4 @@
-﻿;
-/*
-
-*/
-
-; ============================================================
+﻿; ============================================================
 ;  FileZones — 6 зон (3x2): папки, DnD, виды, INI-состояние
 ;  AutoHotkey v1.1.30+   (запускается извне, окно сразу видно)
 ; ============================================================
@@ -572,10 +567,10 @@ OpenSettingsWindow() {
     Gui, Settings:Add, Edit, x158 y36 w452 h22 vSetThumbnailExts
     Gui, Settings:Add, Text, x28 y70 w125 h22 +0x200, Объектов за проход
     Gui, Settings:Add, Edit, x158 y70 w62 h22 Number vSetStartChunk
-    Gui, Settings:Add, Text, x236 y70 w96 h22 +0x200, Шрифт списка
-    Gui, Settings:Add, Edit, x340 y70 w56 h22 Number vSetFsBase
-    Gui, Settings:Add, Text, x412 y70 w118 h22 +0x200, Шрифт заголовка
-    Gui, Settings:Add, Edit, x538 y70 w56 h22 Number vSetFsTitle
+    Gui, Settings:Add, Text, x260 y70 w146 h22 +0x200, Шрифт заголовка
+    Gui, Settings:Add, Edit, x390 y70 w58 h22 Number vSetFsTitle
+    Gui, Settings:Add, Text, x464 y70 w96 h22 +0x200, Шрифт списка
+    Gui, Settings:Add, Edit, x568 y70 w42 h22 Number vSetFsBase
 
     Gui, Settings:Add, GroupBox, x14 y132 w612 h150, Сетка и полосы зон
     Gui, Settings:Add, Text, x28 y158 w125 h22 +0x200, Цвет сетки (HEX)
@@ -840,7 +835,7 @@ BuildHelpHtml() {
          . "<li>группой — если выделено несколько объектов.</li>`r`n"
          . "</ul>`r`n"
          . "<p>Синяя полоса показывает место вставки. У краёв длинного списка включается автоматическая прокрутка. <b>Esc</b> отменяет начатое перетаскивание.</p>`r`n"
-         . "<p>Ручная перестановка отключает сортировку по столбцу. После этого существующий пользовательский порядок сохраняется, а новые объекты из привязанной папки добавляются отдельной группой наверх. Внутри новой группы они располагаются по дате создания — от новых к старым. После добавления порядок фиксируется, поэтому при следующем обновлении наверх попадут только действительно новые объекты.</p>`r`n"
+         . "<p>Ручная перестановка отключает сортировку п�� столбцу. После этого существующий пользовательский порядок сохраняется, а новые объекты из привязанной папки добавляются отдельной группой наверх. Внутри новой группы они располагаются по дате создания — от новых к старым. После добавления порядок фиксируется, поэтому при следующем обновлении наверх попадут только действительно новые объекты.</p>`r`n"
          . "<p>Перетаскивание внутри FileZones меняет только состав и порядок зон: файлы и папки на диске не перемещаются.</p>`r`n"
          . "<h2>Скрытие и очистка</h2>`r`n"
          . "<p>Следующие команды не удаляют данные с компьютера:</p>`r`n"
@@ -3057,16 +3052,5 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-	If FileExist("E:\Program Files\Bred3\bred3_2k.exe")
-		Run, "E:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files (86)\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files (86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files (x86)\Bred3\bred3_2k.exe")
-		Run, "C:\Program Files (x86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
-	Else If FileExist("C:\Program Files\PSPad editor\PSPad.exe")
-		Run, "C:\Program Files\PSPad editor\PSPad.exe" "%A_ScriptFullPath%"
-	Else
-		Run, "notepad.exe" "%A_ScriptFullPath%"
+    Run, "%A_ScriptFullPath%"
 }
