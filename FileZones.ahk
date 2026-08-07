@@ -459,7 +459,9 @@ BuildMenus() {
     Menu, Tray, Add, Настройки, MenuSettings
     Menu, Tray, Add, Справка, MenuHelp
     Menu, Tray, Add
-    Menu, Tray, Add, Редактировать, EditScript
+    if !A_IsCompiled {
+        Menu, Tray, Add, Редактировать, EditScript
+    }
     Menu, Tray, Add, Выход, MenuExit
     Menu, Tray, Default, Показать окно
     Menu, Tray, Click, 1
@@ -3052,5 +3054,7 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-    Run, "%A_ScriptFullPath%"
+    Run, edit "%A_ScriptFullPath%",, UseErrorLevel
+    if (ErrorLevel)
+        Run, "%A_WinDir%\System32\notepad.exe" "%A_ScriptFullPath%"
 }
