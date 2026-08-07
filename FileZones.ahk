@@ -1,4 +1,9 @@
-﻿; ============================================================
+﻿;
+/*
+
+*/
+
+; ============================================================
 ;  FileZones — 6 зон (3x2): папки, DnD, виды, INI-состояние
 ;  AutoHotkey v1.1.30+   (запускается извне, окно сразу видно)
 ; ============================================================
@@ -347,6 +352,7 @@ if (Z[CtxZone].foldersFirst)
     Menu, ZoneMenu, Check, Папки всегда сверху
 else
     Menu, ZoneMenu, Uncheck, Папки всегда сверху
+UpdateColorMenuMarks(CtxZone)
 Menu, ZoneMenu, Show
 return
 
@@ -571,7 +577,7 @@ OpenSettingsWindow() {
     Gui, Settings:Add, Text, x412 y70 w118 h22 +0x200, Шрифт заголовка
     Gui, Settings:Add, Edit, x538 y70 w56 h22 Number vSetFsTitle
 
-    Gui, Settings:Add, GroupBox, x14 y132 w612 h184, Сетка и полосы зон
+    Gui, Settings:Add, GroupBox, x14 y132 w612 h150, Сетка и полосы зон
     Gui, Settings:Add, Text, x28 y158 w125 h22 +0x200, Цвет сетки (HEX)
     Gui, Settings:Add, Edit, x158 y158 w92 h22 vSetGridColor
     Gui, Settings:Add, Text, x278 y158 w104 h22 +0x200, Толщина сетки
@@ -585,25 +591,23 @@ OpenSettingsWindow() {
     Gui, Settings:Font, s9 cGray, Segoe UI
     Gui, Settings:Add, Text, x28 y216 w582 h20, auto — цвет полосы берётся от цвета зоны; насыщенность 0–100 задаёт силу усиления цвета
     Gui, Settings:Font, s10 cDefault, Segoe UI
-    Gui, Settings:Add, Text, x28 y242 w125 h22 +0x200, Начальные цвета
-    Gui, Settings:Add, Edit, x158 y242 w452 h22 vSetDefaultColors
-    Gui, Settings:Add, Text, x28 y274 w125 h22 +0x200, Палитра меню
-    Gui, Settings:Add, Edit, x158 y274 w452 h22 vSetPalette
+    Gui, Settings:Add, Text, x28 y242 w125 h22 +0x200, Палитра меню
+    Gui, Settings:Add, Edit, x158 y242 w452 h22 vSetPalette
 
-    Gui, Settings:Add, GroupBox, x14 y328 w612 h58, Область уведомлений
-    Gui, Settings:Add, CheckBox, x28 y352 w410 h22 vSetShowTrayIcon, Показывать значок FileZones в трее
+    Gui, Settings:Add, GroupBox, x14 y294 w612 h58, Область уведомлений
+    Gui, Settings:Add, CheckBox, x28 y318 w410 h22 vSetShowTrayIcon, Показывать значок FileZones в трее
 
-    Gui, Settings:Add, Button, x350 y404 w86 h28 gSettingsOK Default, OK
-    Gui, Settings:Add, Button, x444 y404 w86 h28 gSettingsApply, Применить
-    Gui, Settings:Add, Button, x538 y404 w86 h28 gSettingsCancel, Отмена
+    Gui, Settings:Add, Button, x350 y370 w86 h28 gSettingsOK Default, OK
+    Gui, Settings:Add, Button, x444 y370 w86 h28 gSettingsApply, Применить
+    Gui, Settings:Add, Button, x538 y370 w86 h28 gSettingsCancel, Отмена
     LoadSettingsControls()
-    Gui, Settings:Show, w640 h446, Настройки
+    Gui, Settings:Show, w640 h412, Настройки
 }
 
 LoadSettingsControls() {
     global THUMBEXTS_RAW, START_CHUNK, FS_BASE, FS_TITLE, GRID_COLOR
          , GRID_THICKNESS, BAND_COLOR, BAND_THICKNESS, BAND_INTENSITY
-         , DEFCOL, PALETTE, SHOW_TRAY_ICON
+         , PALETTE, SHOW_TRAY_ICON
     GuiControl, Settings:, SetThumbnailExts, %THUMBEXTS_RAW%
     GuiControl, Settings:, SetStartChunk, %START_CHUNK%
     GuiControl, Settings:, SetFsBase, %FS_BASE%
@@ -613,7 +617,6 @@ LoadSettingsControls() {
     GuiControl, Settings:, SetBandColor, %BAND_COLOR%
     GuiControl, Settings:, SetBandThickness, %BAND_THICKNESS%
     GuiControl, Settings:, SetBandIntensity, %BAND_INTENSITY%
-    GuiControl, Settings:, SetDefaultColors, % JoinColors(DEFCOL)
     GuiControl, Settings:, SetPalette, % JoinColors(PALETTE)
     GuiControl, Settings:, SetShowTrayIcon, %SHOW_TRAY_ICON%
 }
@@ -639,10 +642,10 @@ return
 ApplySettingsFromGui() {
     global SetThumbnailExts, SetStartChunk, SetFsBase, SetFsTitle, SetGridColor
          , SetGridThickness, SetBandColor, SetBandThickness, SetBandIntensity
-         , SetDefaultColors, SetPalette, SetShowTrayIcon
+         , SetPalette, SetShowTrayIcon
     global THUMBEXTS_RAW, THUMBEXTS, START_CHUNK, FS_BASE, FS_TITLE, GRID_COLOR
          , GRID_THICKNESS, BAND_COLOR, BAND_THICKNESS, BAND_INTENSITY
-         , DEFCOL, PALETTE, SHOW_TRAY_ICON, INI, GuiHwnd, ZCOUNT
+         , PALETTE, SHOW_TRAY_ICON, INI, GuiHwnd, ZCOUNT
          , TITLEH, REFRESHH, FOLDH, VIEWH, LVH, hNameEdit
 
     Gui, Settings:Submit, NoHide
@@ -663,10 +666,9 @@ ApplySettingsFromGui() {
         MsgBox, 48, Настройка, Цвет полос — шесть HEX-символов либо слово auto.
         return false
     }
-    newDefaults := ParseColorList(SetDefaultColors, 6, 6)
     newPalette := ParseColorList(SetPalette, 6, 16)
-    if !IsObject(newDefaults) || !IsObject(newPalette) {
-        MsgBox, 48, Настройка, Начальные цвета: ровно 6 HEX-цветов.`nПалитра: от 6 до 16 HEX-цветов, через запятую.
+    if !IsObject(newPalette) {
+        MsgBox, 48, Настройка, Палитра: от 6 до 16 HEX-цветов, через запятую.
         return false
     }
 
@@ -680,7 +682,6 @@ ApplySettingsFromGui() {
     BAND_COLOR := NormalizeBandColor(SetBandColor)
     BAND_THICKNESS := SetBandThickness + 0
     BAND_INTENSITY := SetBandIntensity + 0
-    DEFCOL := newDefaults
     PALETTE := newPalette
     SHOW_TRAY_ICON := SetShowTrayIcon ? 1 : 0
 
@@ -693,7 +694,6 @@ ApplySettingsFromGui() {
     IniWrite, %BAND_COLOR%, %INI%, App, BandColor
     IniWrite, %BAND_THICKNESS%, %INI%, App, BandThickness
     IniWrite, %BAND_INTENSITY%, %INI%, App, BandIntensity
-    IniWrite, % JoinColors(DEFCOL), %INI%, App, DefaultColors
     IniWrite, % JoinColors(PALETTE), %INI%, App, Palette
     IniWrite, %SHOW_TRAY_ICON%, %INI%, App, ShowTrayIcon
 
@@ -2562,11 +2562,9 @@ LoadState() {
     LoadAppSetting("ShowTrayIcon", SHOW_TRAY_ICON, 1)
     SHOW_TRAY_ICON := (SHOW_TRAY_ICON = 0) ? 0 : 1
 
-    IniRead, rawColors, %INI%, App, DefaultColors, __MISSING__
-    if (rawColors = "__MISSING__" || rawColors = "ERROR")
-        IniWrite, % JoinColors(DEFCOL), %INI%, App, DefaultColors
-    else if IsObject(parsed := ParseColorList(rawColors, 6, 6))
-        DEFCOL := parsed
+    ; Начальные цвета — внутренние значения по умолчанию, а не настройка.
+    ; Удаляем устаревший ключ: сохранённые цвета самих зон находятся в [ZoneN].
+    IniDelete, %INI%, App, DefaultColors
 
     IniRead, rawColors, %INI%, App, Palette, __MISSING__
     if (rawColors = "__MISSING__" || rawColors = "ERROR")
@@ -2863,9 +2861,9 @@ ZeroPad(n, len) {
 }
 
 ; Создаёт цветные HBITMAP в памяти и сразу назначает их пунктам меню.
-; Файлы BMP/ICO не используются.
-AttachSwatches(hMenu, colors) {
-    global SWATCH
+; marks: 0 — обычный образец, 1 — цвет другой зоны (серая галка),
+;        2 — активный цвет текущей зоны (чёрная галка).
+AttachSwatches(hMenu, colors, marks := "") {
     static MIIM_BITMAP := 0x0080
 
     if !hMenu
@@ -2879,7 +2877,8 @@ AttachSwatches(hMenu, colors) {
     NumPut(MIIM_BITMAP, mii, 4, "UInt")
 
     for i, hex in colors {
-        hbm := SwatchBitmap(hex)
+        mark := IsObject(marks) && marks.HasKey(i) ? marks[i] : 0
+        hbm := SwatchBitmap(hex, mark)
         if (!hbm)
             continue
         NumPut(hbm, mii, ofsBmp, "Ptr")
@@ -2887,9 +2886,32 @@ AttachSwatches(hMenu, colors) {
     }
 }
 
+; Обновляет пометки перед каждым показом меню, поскольку контекстная зона меняется.
+UpdateColorMenuMarks(zone) {
+    global Z, ZCOUNT, PALETTE
+
+    marks := []
+    for i, hex in PALETTE {
+        marks[i] := 0
+        Loop, %ZCOUNT% {
+            zi := A_Index
+            if (zi != zone && Z[zi].color = hex) {
+                marks[i] := 1
+                break
+            }
+        }
+        if (Z[zone].color = hex)
+            marks[i] := 2
+    }
+
+    ; Старые HBITMAP больше не нужны: меню ещё не показано.
+    FreeSwatches()
+    AttachSwatches(MenuGetHandle("ColorMenu"), PALETTE, marks)
+}
+
 ; 32-битный top-down DIB с заполненным альфа-каналом (0xFF),
 ; иначе меню рисует чёрные квадраты.
-SwatchBitmap(hex, border := 0xB0B0B0) {
+SwatchBitmap(hex, mark := 0, border := 0xB0B0B0) {
     global SWATCH
 
     hex := Trim(hex)
@@ -2898,8 +2920,9 @@ SwatchBitmap(hex, border := 0xB0B0B0) {
     if (StrLen(hex) != 6)
         return 0
 
-    if SWATCH.HasKey(hex)
-        return SWATCH[hex]
+    cacheKey := hex "|" mark
+    if SWATCH.HasKey(cacheKey)
+        return SWATCH[cacheKey]
 
     size := DllCall("GetSystemMetrics", "Int", 49)   ; SM_CXSMICON
     if (size < 8)
@@ -2917,7 +2940,7 @@ SwatchBitmap(hex, border := 0xB0B0B0) {
     NumPut(0,      bi, 16, "UInt")         ; biCompression = BI_RGB
 
     bits := 0
-    hbm := DllCall("CreateDIBSection", "Ptr", 0, "Ptr", &bi, "UInt", 0   ; DIB_RGB_COLORS
+    hbm := DllCall("CreateDIBSection", "Ptr", 0, "Ptr", &bi, "UInt", 0
                  , "Ptr*", bits, "Ptr", 0, "UInt", 0, "Ptr")
     if (!hbm || !bits) {
         if (hbm)
@@ -2927,20 +2950,40 @@ SwatchBitmap(hex, border := 0xB0B0B0) {
 
     fill := 0xFF000000 | rgb
     edge := 0xFF000000 | border
+    check := (mark = 2) ? 0xFF000000 : 0xFF777777
     last := size - 1
+    thick := Max(1.0, size / 10.0)
 
     Loop, %size% {
         y := A_Index - 1
         Loop, %size% {
             x := A_Index - 1
             onEdge := (x = 0 || y = 0 || x = last || y = last)
-            NumPut(onEdge ? edge : fill, bits + 0, (y * size + x) * 4, "UInt")
+            px := onEdge ? edge : fill
+            if (mark && (NearSegment(x, y, size*.18, size*.53, size*.40, size*.73, thick)
+                      || NearSegment(x, y, size*.40, size*.73, size*.82, size*.27, thick)))
+                px := check
+            NumPut(px, bits + 0, (y * size + x) * 4, "UInt")
         }
     }
 
     ; Bitmap должен существовать всё время, пока работает меню.
-    SWATCH[hex] := hbm
+    SWATCH[cacheKey] := hbm
     return hbm
+}
+
+NearSegment(px, py, x1, y1, x2, y2, tolerance) {
+    dx := x2 - x1, dy := y2 - y1
+    len2 := dx*dx + dy*dy
+    if (len2 <= 0)
+        return false
+    t := ((px - x1)*dx + (py - y1)*dy) / len2
+    if (t < 0)
+        t := 0
+    else if (t > 1)
+        t := 1
+    qx := x1 + t*dx, qy := y1 + t*dy
+    return ((px - qx)*(px - qx) + (py - qy)*(py - qy)) <= tolerance*tolerance
 }
 
 FreeSwatches() {
@@ -3014,5 +3057,16 @@ if SHELL_COM_INIT
 ExitApp
 
 EditScript() {
-    Edit
+	If FileExist("E:\Program Files\Bred3\bred3_2k.exe")
+		Run, "E:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
+	Else If FileExist("C:\Program Files\Bred3\bred3_2k.exe")
+		Run, "C:\Program Files\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
+	Else If FileExist("C:\Program Files (86)\Bred3\bred3_2k.exe")
+		Run, "C:\Program Files (86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
+	Else If FileExist("C:\Program Files (x86)\Bred3\bred3_2k.exe")
+		Run, "C:\Program Files (x86)\Bred3\bred3_2k.exe" "%A_ScriptFullPath%"
+	Else If FileExist("C:\Program Files\PSPad editor\PSPad.exe")
+		Run, "C:\Program Files\PSPad editor\PSPad.exe" "%A_ScriptFullPath%"
+	Else
+		Run, "notepad.exe" "%A_ScriptFullPath%"
 }
